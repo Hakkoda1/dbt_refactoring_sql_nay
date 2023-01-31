@@ -17,21 +17,21 @@ payments as (
 
     select * from {{ ref('stg_payments') }}
 
-),
+)
 
 
 select
 
-    order_id,
-    customer_id,
-    surname,
-    givenname,
+    orders.order_id,
+    orders.customer_id,
+    customers.surname,
+    customers.givenname,
     first_order_date,
     order_count,
     total_lifetime_value,
     payment_amount as order_value_dollars,
-    order_status,
-    payment_status
+    orders.order_status,
+    payments.payment_status
 
 from orders
 
@@ -73,7 +73,7 @@ join (
                                 when a.order_status not in ('returned','return_pending') 
                                 then 1 
                               end), 0) as avg_non_returned_order_value,
-        array_agg(distinct a.id) as order_ids
+        array_agg(distinct a.order_id) as order_ids
 
     from orders a
 

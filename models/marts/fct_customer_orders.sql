@@ -11,7 +11,7 @@ select
     orders.status as order_status,
     payments.status as payment_status
 
-from {{ source('jaffle_shop', 'orders') }} as orders
+from {{ ref('stg_orders') }} as orders
 
 join (
       select
@@ -19,7 +19,7 @@ join (
         first_name || ' ' || last_name as name, 
         *
 
-      from {{ source('jaffle_shop', 'customers') }}
+      from {{ ref('stg_customers') }}
 
     ) customers
 on orders.user_id = customers.id
@@ -67,7 +67,7 @@ join (
                 row_number() over (partition by user_id order by order_date, id) as user_order_seq,
                 *
 
-            from {{ source('jaffle_shop', 'orders') }}
+            from {{ ref('stg_orders') }}
         ) a
 
     join ( 
@@ -76,11 +76,11 @@ join (
                 first_name || ' ' || last_name as name, 
                 *
 
-            from {{ source('jaffle_shop', 'customers') }}
+            from {{ ref('stg_customers') }}
         ) b
     on a.user_id = b.id
 
-    left outer join {{ source('stripe', 'payment') }} c
+    left outer join {{ ref('stg_payments') }} c
     on a.id = c.orderid
 
     where a.status not in ('pending') and c.status != 'fail'
@@ -90,7 +90,7 @@ join (
     ) customer_order_history
 on orders.user_id = customer_order_history.customer_id
 
-left outer join {{ source('stripe', 'payment') }} payments
+left outer join {{ ref('stg_payments') }} payments
 on orders.id = payments.orderid
 
 where payments.status != 'fail'

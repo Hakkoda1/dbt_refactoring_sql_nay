@@ -18,6 +18,8 @@ payments as (
 
     from source
 
+    where payment_status != 'fail'
+
 )
 
 select * from payments

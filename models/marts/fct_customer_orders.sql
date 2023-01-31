@@ -17,33 +17,15 @@ payments as (
 
     select * from {{ ref('stg_payments') }}
 
-)
+),
 
-
-select
-
-    orders.order_id,
-    orders.customer_id,
-    customers.surname,
-    customers.givenname,
-    first_order_date,
-    order_count,
-    total_lifetime_value,
-    payment_amount as order_value_dollars,
-    orders.order_status,
-    payments.payment_status
-
-from orders
-
-join customers
-on orders.customer_id = customers.customer_id
-
-join (
+--logical CTEs
+customer_order_history as (
 
     select 
 
         b.customer_id,
-        b.name as full_name,
+        b.full_name,
         b.surname,
         b.givenname,
         min(order_date) as first_order_date,
@@ -83,14 +65,31 @@ join (
     left outer join payments c
     on a.order_id = c.order_id
 
-    where a.order_status not in ('pending') and c.payment_status != 'fail'
-
     group by 1, 2, 3, 4
 
-    ) customer_order_history
+)
+
+
+select
+
+    orders.order_id,
+    orders.customer_id,
+    customers.surname,
+    customers.givenname,
+    first_order_date,
+    order_count,
+    total_lifetime_value,
+    payment_amount as order_value_dollars,
+    orders.order_status,
+    payments.payment_status
+
+from orders
+
+join customers
+on orders.customer_id = customers.customer_id
+
+join customer_order_history
 on orders.customer_id = customer_order_history.customer_id
 
 left outer join payments
 on orders.order_id = payments.order_id
-
-where payments.payment_status != 'fail'

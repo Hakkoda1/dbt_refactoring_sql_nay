@@ -28,7 +28,7 @@ customer_order_history as (
         customers.full_name,
         customers.surname,
         customers.givenname,
-        min(order_date) as first_order_date,
+        min(orders.order_date) as first_order_date,
         min(case 
                 when orders.order_status not in ('returned','return_pending') 
                 then order_date 
@@ -52,9 +52,9 @@ customer_order_history as (
                 then payments.payment_amount
                 else 0 
             end) / nullif(count(case 
-                                when orders.order_status not in ('returned','return_pending') 
-                                then 1 
-                              end), 0) as avg_non_returned_order_value,
+                                    when orders.order_status not in ('returned','return_pending') 
+                                    then 1 
+                                end), 0) as avg_non_returned_order_value,
         array_agg(distinct orders.order_id) as order_ids
 
     from orders
